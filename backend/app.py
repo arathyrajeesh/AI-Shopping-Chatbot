@@ -9,6 +9,10 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+# Global state
+cart = []
+last_order = None
+
 # Gemini client
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -16,38 +20,51 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 with open("products.json") as f:
     products = json.load(f)
 
-# In-memory cart
-cart = []
-
 @app.route("/chat", methods=["POST"])
 def chat():
+    global last_order
     user_msg = request.json.get("message", "").lower()
 
-    # 1️⃣ Show cart items (MUST BE FIRST)
+    # 1️⃣ Show cart
     if "show cart" in user_msg or user_msg == "cart":
         if not cart:
             return jsonify({"reply": "🛒 Your cart is empty."})
 
         reply = "🛒 Your Cart:\n"
         total = 0
-
         for i, p in enumerate(cart, start=1):
             reply += f"{i}. {p['name']} - ₹{p['price']}\n"
             total += p["price"]
 
         reply += f"\nTotal items: {len(cart)}"
         reply += f"\nTotal price: ₹{total}"
+        return jsonify({"reply": reply})
+
+    # 2️⃣ Show last order
+    # Show last order summary
+    if "last order" in user_msg or user_msg == "show order" or "order summary" in user_msg:
+        if not last_order:
+            return jsonify({"reply": "You have not placed any orders yet."})
+
+        reply = (
+            "🧾 Last Order Summary\n"
+            f"Products: {last_order['products']}\n"
+            f"Quantity: {last_order['quantity']}\n"
+            f"Total: ₹{last_order['total']}\n"
+            f"Status: {last_order['status']}"
+        )
 
         return jsonify({"reply": reply})
 
-    # 2️⃣ List available products
+
+    # 3️⃣ Show products
     if "show" in user_msg or "products" in user_msg:
         reply = "🛍 Available products:\n"
         for p in products:
             reply += f"{p['name']} - ₹{p['price']}\n"
         return jsonify({"reply": reply})
 
-    # 3️⃣ Price of a specific product
+    # 4️⃣ Price query
     if "price" in user_msg:
         for p in products:
             if p["name"].lower() in user_msg:
@@ -55,7 +72,7 @@ def chat():
                     "reply": f"The price of {p['name']} is ₹{p['price']}"
                 })
 
-    # 4️⃣ Products under a budget
+    # 5️⃣ Under budget
     if "under" in user_msg:
         price = int("".join(filter(str.isdigit, user_msg)))
         filtered = [p for p in products if p["price"] <= price]
@@ -68,7 +85,7 @@ def chat():
             reply += f"{p['name']} - ₹{p['price']}\n"
         return jsonify({"reply": reply})
 
-    # 5️⃣ Add product to cart
+    # 6️⃣ Add to cart
     if "add" in user_msg:
         for p in products:
             if p["name"].lower() in user_msg:
@@ -77,36 +94,41 @@ def chat():
                     "reply": f"{p['name']} added to cart. Anything else?"
                 })
 
-    # 6️⃣ Yes / No handling
+    # 7️⃣ Yes / No handling
     if user_msg in ["no", "nope", "nothing", "nothing else"]:
-        return jsonify({
-            "reply": "Okay 🙂 Type 'checkout' to confirm your order."
-        })
+        return jsonify({"reply": "Okay 🙂 Type 'checkout' to confirm your order."})
 
     if user_msg in ["yes", "yeah", "yep", "sure"]:
         return jsonify({
             "reply": "Great! 😊 You can add another product or type 'show available products'."
         })
 
-    # 7️⃣ Checkout
+    # 8️⃣ Checkout (ONLY ONE BLOCK)
     if "checkout" in user_msg:
         if not cart:
             return jsonify({"reply": "Your cart is empty."})
 
         total = sum(p["price"] for p in cart)
 
+        last_order = {
+            "products": [p["name"] for p in cart],
+            "quantity": len(cart),
+            "total": total,
+            "status": "Confirmed"
+        }
+
         reply = (
             "✅ Order Confirmed\n"
-            f"Products: {[p['name'] for p in cart]}\n"
-            f"Quantity: {len(cart)}\n"
-            f"Total: ₹{total}\n"
-            "Status: Confirmed"
+            f"Products: {last_order['products']}\n"
+            f"Quantity: {last_order['quantity']}\n"
+            f"Total: ₹{last_order['total']}\n"
+            f"Status: {last_order['status']}"
         )
 
-        cart.clear()  # clear cart after order
+        cart.clear()
         return jsonify({"reply": reply})
 
-    # 8️⃣ Gemini fallback (LAST)
+    # 9️⃣ Gemini fallback (LAST)
     response = client.models.generate_content(
         model="gemini-1.5-flash",
         contents=user_msg
