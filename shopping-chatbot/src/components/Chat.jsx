@@ -9,38 +9,45 @@ export default function Chat() {
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        setMessages([...messages, { sender: "user", text: input }]);
+        const userMsg = { sender: "user", text: input };
+        setMessages(prev => [...prev, userMsg]);
 
-        const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input })
-        });
+        try {
+            const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: input })
+            });
 
-        const data = await res.json();
-        setMessages(prev => [...prev, { sender: "bot", text: data.reply }]);
+            const data = await res.json();
+
+            const botMsg = { sender: "bot", text: data.reply };
+            setMessages(prev => [...prev, botMsg]);
+        } catch (err) {
+            setMessages(prev => [...prev, {
+            sender: "bot",
+            text: "❌ Error connecting to backend"
+            }]);
+        }
+
         setInput("");
-    };
+        };
+
 
     return (
-        <div className="chat">
+        <div>
         <h2>🛒 AI Shopping Chatbot</h2>
 
-        <div className="box">
-            {messages.map((m, i) => (
-            <div key={i} className={m.sender}>
-                {m.text}
-            </div>
-            ))}
-        </div>
+        {messages.map((m, i) => (
+            <p key={i}><b>{m.sender}:</b> {m.text}</p>
+        ))}
 
         <input
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && sendMessage()}
             placeholder="Type message..."
         />
         <button onClick={sendMessage}>Send</button>
         </div>
-  );
+    );
 }
