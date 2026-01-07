@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API_URL = "http://127.0.0.1:5000/chat";
+const API_URL = "https://ai-shopping-chatbot-ufc6.onrender.com/chat";
 
 export default function Chat() {
     const [messages, setMessages] = useState([]);
