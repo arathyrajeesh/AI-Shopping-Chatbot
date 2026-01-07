@@ -67,7 +67,6 @@ export default function Chat() {
     );
 }
 
-/* ---------- STYLES ---------- */
 
 const styles = {
     container: {

@@ -3,7 +3,7 @@
         "id": 1,
         "name": "Backpack",
         "price": 2499,
-        "description": "laptop",
+        "description": "backup for laptop",
         "stock": 10
     },
     {
