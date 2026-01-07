@@ -12,7 +12,6 @@ CORS(app)
 cart = []
 last_order = None
 
-# ✅ Correct Gemini setup
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -26,9 +25,9 @@ def chat():
 
     if "show cart" in user_msg or user_msg == "cart":
         if not cart:
-            return jsonify({"reply": "🛒 Your cart is empty."})
+            return jsonify({"reply": " Your cart is empty."})
 
-        reply = "🛒 Your Cart:\n"
+        reply = "Your Cart:\n"
         total = 0
         for i, p in enumerate(cart, start=1):
             reply += f"{i}. {p['name']} - ₹{p['price']}\n"
@@ -43,7 +42,7 @@ def chat():
             return jsonify({"reply": "You have not placed any orders yet."})
 
         reply = (
-            "🧾 Last Order Summary\n"
+            " Last Order Summary\n"
             f"Products: {last_order['products']}\n"
             f"Quantity: {last_order['quantity']}\n"
             f"Total: ₹{last_order['total']}\n"
@@ -52,7 +51,7 @@ def chat():
         return jsonify({"reply": reply})
 
     if "show" in user_msg or "products" in user_msg:
-        reply = "🛍 Available products:\n"
+        reply = " Available products:\n"
         for p in products:
             reply += f"{p['name']} - ₹{p['price']}\n"
         return jsonify({"reply": reply})
@@ -81,10 +80,10 @@ def chat():
                 return jsonify({"reply": f"{p['name']} added to cart. Anything else?"})
 
     if user_msg in ["no", "nope", "nothing", "nothing else"]:
-        return jsonify({"reply": "Okay 🙂 Type 'checkout' to confirm your order."})
+        return jsonify({"reply": "Okay  Type 'checkout' to confirm your order."})
 
     if user_msg in ["yes", "yeah", "yep", "sure"]:
-        return jsonify({"reply": "Great! 😊 You can add another product or type 'show available products'."})
+        return jsonify({"reply": "Great!  You can add another product or type 'show available products'."})
 
     if "checkout" in user_msg:
         if not cart:
@@ -100,7 +99,7 @@ def chat():
         }
 
         reply = (
-            "✅ Order Confirmed\n"
+            " Order Confirmed\n"
             f"Products: {last_order['products']}\n"
             f"Quantity: {last_order['quantity']}\n"
             f"Total: ₹{last_order['total']}\n"
@@ -110,7 +109,6 @@ def chat():
         cart.clear()
         return jsonify({"reply": reply})
 
-    # ✅ Gemini fallback
     response = model.generate_content(user_msg)
     return jsonify({"reply": response.text})
 
