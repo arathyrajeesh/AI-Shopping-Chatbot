@@ -38,3 +38,7 @@ AI-Shopping-Chatbot/
 │
 └── README.md
 
+
+## 🌐 Live Deployment
+- Frontend: https://ai-shopping-chatbot-ten.vercel.app/
+- Backend: https://ai-shopping-chatbot-1-w3sd.onrender.com
