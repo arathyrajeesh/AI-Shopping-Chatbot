@@ -1,10 +1,10 @@
-# AI Shopping Chatbot 🛒
+# AI Shopping Chatbot 
 
 A simple AI-powered shopping chatbot that allows users to browse products, add items to a cart, and place an order through a conversational interface.
 
 ---
 
-## ✨ Features
+##  Features
 - List available products
 - Ask product-related questions (price, budget)
 - Add products to cart
@@ -15,7 +15,7 @@ A simple AI-powered shopping chatbot that allows users to browse products, add i
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 - Frontend: React (Vite)
 - Backend: Python (Flask)
 - AI: Google Gemini API
@@ -23,7 +23,7 @@ A simple AI-powered shopping chatbot that allows users to browse products, add i
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 AI-Shopping-Chatbot/
