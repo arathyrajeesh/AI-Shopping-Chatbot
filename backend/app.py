@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-from google import genai
+import google.generativeai as genai
 import json, os
 
 load_dotenv()
@@ -12,7 +12,9 @@ CORS(app)
 cart = []
 last_order = None
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# ✅ Correct Gemini setup
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 with open("products.json") as f:
     products = json.load(f)
@@ -36,8 +38,7 @@ def chat():
         reply += f"\nTotal price: ₹{total}"
         return jsonify({"reply": reply})
 
-
-    if "last order" in user_msg or user_msg == "show order" or "order summary" in user_msg:
+    if "last order" in user_msg or "show order" in user_msg or "order summary" in user_msg:
         if not last_order:
             return jsonify({"reply": "You have not placed any orders yet."})
 
@@ -48,7 +49,6 @@ def chat():
             f"Total: ₹{last_order['total']}\n"
             f"Status: {last_order['status']}"
         )
-
         return jsonify({"reply": reply})
 
     if "show" in user_msg or "products" in user_msg:
@@ -60,9 +60,7 @@ def chat():
     if "price" in user_msg:
         for p in products:
             if p["name"].lower() in user_msg:
-                return jsonify({
-                    "reply": f"The price of {p['name']} is ₹{p['price']}"
-                })
+                return jsonify({"reply": f"The price of {p['name']} is ₹{p['price']}"})
 
     if "under" in user_msg:
         price = int("".join(filter(str.isdigit, user_msg)))
@@ -80,17 +78,13 @@ def chat():
         for p in products:
             if p["name"].lower() in user_msg:
                 cart.append(p)
-                return jsonify({
-                    "reply": f"{p['name']} added to cart. Anything else?"
-                })
+                return jsonify({"reply": f"{p['name']} added to cart. Anything else?"})
 
     if user_msg in ["no", "nope", "nothing", "nothing else"]:
         return jsonify({"reply": "Okay 🙂 Type 'checkout' to confirm your order."})
 
     if user_msg in ["yes", "yeah", "yep", "sure"]:
-        return jsonify({
-            "reply": "Great! 😊 You can add another product or type 'show available products'."
-        })
+        return jsonify({"reply": "Great! 😊 You can add another product or type 'show available products'."})
 
     if "checkout" in user_msg:
         if not cart:
@@ -116,11 +110,8 @@ def chat():
         cart.clear()
         return jsonify({"reply": reply})
 
-    response = client.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=user_msg
-    )
-
+    # ✅ Gemini fallback
+    response = model.generate_content(user_msg)
     return jsonify({"reply": response.text})
 
 if __name__ == "__main__":
