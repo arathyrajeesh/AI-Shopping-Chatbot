@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "name": "Backpack",
+        "price": 2499,
+        "description": "laptop",
+        "stock": 10
+    },
+    {
+        "id": 2,
+        "name": "Headphones",
+        "price": 1999,
+        "description": "Boat headphones",
+        "stock": 15
+    },
+    {
+        "id": 3,
+        "name": "Smart Watch",
+        "price": 2999,
+        "description": "Fitness tracking smart watch",
+        "stock": 8
+    }
+]
