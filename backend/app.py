@@ -23,14 +23,31 @@ cart = []
 def chat():
     user_msg = request.json.get("message", "").lower()
 
-    # 1️⃣ List available products
+    # 1️⃣ Show cart items (MUST BE FIRST)
+    if "show cart" in user_msg or user_msg == "cart":
+        if not cart:
+            return jsonify({"reply": "🛒 Your cart is empty."})
+
+        reply = "🛒 Your Cart:\n"
+        total = 0
+
+        for i, p in enumerate(cart, start=1):
+            reply += f"{i}. {p['name']} - ₹{p['price']}\n"
+            total += p["price"]
+
+        reply += f"\nTotal items: {len(cart)}"
+        reply += f"\nTotal price: ₹{total}"
+
+        return jsonify({"reply": reply})
+
+    # 2️⃣ List available products
     if "show" in user_msg or "products" in user_msg:
         reply = "🛍 Available products:\n"
         for p in products:
             reply += f"{p['name']} - ₹{p['price']}\n"
         return jsonify({"reply": reply})
 
-    # 2️⃣ Price of a specific product
+    # 3️⃣ Price of a specific product
     if "price" in user_msg:
         for p in products:
             if p["name"].lower() in user_msg:
@@ -38,7 +55,7 @@ def chat():
                     "reply": f"The price of {p['name']} is ₹{p['price']}"
                 })
 
-    # 3️⃣ Products under a budget
+    # 4️⃣ Products under a budget
     if "under" in user_msg:
         price = int("".join(filter(str.isdigit, user_msg)))
         filtered = [p for p in products if p["price"] <= price]
@@ -51,7 +68,7 @@ def chat():
             reply += f"{p['name']} - ₹{p['price']}\n"
         return jsonify({"reply": reply})
 
-    # 4️⃣ Add product to cart
+    # 5️⃣ Add product to cart
     if "add" in user_msg:
         for p in products:
             if p["name"].lower() in user_msg:
@@ -60,32 +77,36 @@ def chat():
                     "reply": f"{p['name']} added to cart. Anything else?"
                 })
 
-    # 5️⃣ Checkout & confirm order
+    # 6️⃣ Yes / No handling
+    if user_msg in ["no", "nope", "nothing", "nothing else"]:
+        return jsonify({
+            "reply": "Okay 🙂 Type 'checkout' to confirm your order."
+        })
+
+    if user_msg in ["yes", "yeah", "yep", "sure"]:
+        return jsonify({
+            "reply": "Great! 😊 You can add another product or type 'show available products'."
+        })
+
+    # 7️⃣ Checkout
     if "checkout" in user_msg:
         if not cart:
             return jsonify({"reply": "Your cart is empty."})
 
         total = sum(p["price"] for p in cart)
-        quantity = len(cart)
 
-        order = {
-            "products": [p["name"] for p in cart],
-            "quantity": quantity,
-            "total_price": total,
-            "status": "Confirmed"
-        }
+        reply = (
+            "✅ Order Confirmed\n"
+            f"Products: {[p['name'] for p in cart]}\n"
+            f"Quantity: {len(cart)}\n"
+            f"Total: ₹{total}\n"
+            "Status: Confirmed"
+        )
 
-        return jsonify({
-            "reply": (
-                "✅ Order Confirmed\n"
-                f"Products: {order['products']}\n"
-                f"Quantity: {order['quantity']}\n"
-                f"Total: ₹{order['total_price']}\n"
-                f"Status: {order['status']}"
-            )
-        })
+        cart.clear()  # clear cart after order
+        return jsonify({"reply": reply})
 
-    # 6️⃣ Gemini AI fallback
+    # 8️⃣ Gemini fallback (LAST)
     response = client.models.generate_content(
         model="gemini-1.5-flash",
         contents=user_msg

@@ -9,43 +9,54 @@ export default function Chat() {
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        const userMsg = { sender: "user", text: input };
-        setMessages(prev => [...prev, userMsg]);
+        const userText = input;
+        setMessages(prev => [...prev, { sender: "user", text: userText }]);
+        setInput("");
 
         try {
-            const res = await fetch(API_URL, {
+        const res = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: input })
-            });
+            body: JSON.stringify({ message: userText })
+        });
 
-            const data = await res.json();
-
-            const botMsg = { sender: "bot", text: data.reply };
-            setMessages(prev => [...prev, botMsg]);
-        } catch (err) {
-            setMessages(prev => [...prev, {
-            sender: "bot",
-            text: "❌ Error connecting to backend"
-            }]);
+        if (!res.ok) {
+            throw new Error("Backend error");
         }
 
-        setInput("");
-        };
+        const data = await res.json();
 
+        setMessages(prev => [
+            ...prev,
+            { sender: "bot", text: data.reply }
+        ]);
+
+        } catch (error) {
+        setMessages(prev => [
+            ...prev,
+            { sender: "bot", text: "Error connecting to backend" }
+        ]);
+        }
+    };
 
     return (
-        <div>
+        <div style={{ maxWidth: "500px", margin: "20px auto" }}>
         <h2>🛒 AI Shopping Chatbot</h2>
 
-        {messages.map((m, i) => (
-            <p key={i}><b>{m.sender}:</b> {m.text}</p>
-        ))}
+        <div style={{ minHeight: "200px", border: "1px solid #ccc", padding: "10px" }}>
+            {messages.map((m, i) => (
+            <p key={i}>
+                <b>{m.sender}:</b> {m.text}
+            </p>
+            ))}
+        </div>
 
         <input
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Type message..."
+            style={{ width: "70%" }}
+            onKeyDown={e => e.key === "Enter" && sendMessage()}
         />
         <button onClick={sendMessage}>Send</button>
         </div>
