@@ -1,7 +1,6 @@
 import { useState } from "react";
 
-const API_URL = "https://ai-shopping-chatbot-ufc6.onrender.com/chat";
-
+const API_URL = "https://ai-shopping-chatbot-1-w3sd.onrender.com/chat";
 export default function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
